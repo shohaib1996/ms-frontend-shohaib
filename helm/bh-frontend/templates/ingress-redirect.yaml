@@ -1,0 +1,30 @@
+{{- if .Values.redirectHost }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bh-frontend-redirect-ingress
+  namespace: {{ .Values.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
+    service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
+    nginx.ingress.kubernetes.io/permanent-redirect: https://{{ .Values.host }}$request_uri
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - {{ .Values.redirectHost }}
+    secretName: {{ .Values.redirectHost }}-tls
+  rules:
+  - host: {{ .Values.redirectHost }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bh-frontend
+            port:
+              name: http
+{{- end }}
